@@ -6,6 +6,7 @@
 
 #define DB_SIZE 2
 #define IP_LEN 15           // dans le cas le plus long : XXX.XXX.XXX.XXX
+#define NAMEL_LEN 200       // nom du fichier partagé
 #define TYPE_LEN 5          // mp3, jpeg ...
 #define KEY_WORD_LEN 30     // longueur maximum des mots clé
 #define KEY_WORD_NBR 10     // nombre maximum de mots clé
@@ -16,6 +17,7 @@
 typedef struct
 {
     char* ip;
+    char* name;
     char* type;
     char** keyWords;
     int keyWordNbr;

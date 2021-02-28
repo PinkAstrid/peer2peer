@@ -9,7 +9,9 @@ db_entry** createDB(char* csvName) {
     for (i = 0; i < DB_SIZE; i++) {
         db[i] = calloc(1,sizeof(db_entry));
 
-        db[i]->ip = calloc(IP_LEN,sizeof(char));        // L'array de mots clé est initialisé dans la fonction fillDB car il
+        db[i]->ip = calloc(IP_LEN,sizeof(char));
+        db[i]->name = calloc(NAMEL_LEN,sizeof(char));   // L'array de mots clé est initialisé dans la fonction fillDB car il
+
         db[i]->type = calloc(TYPE_LEN,sizeof(char));    // faut connaitre leur nombre
         db[i]->hash = calloc(HASH_LEN,sizeof(char));
     }
@@ -31,11 +33,13 @@ void fillDB(db_entry** db, char* csvName) {
 
     while(fgets(currentLine, TOTAL_ENTRY_LEN, csvp) != NULL) {
         char* ip = strtok(currentLine,";\n");
+        char* name = strtok(NULL,";\n");
         char* type = strtok(NULL,";\n");
         char* keyWords = strtok(NULL,";\n");
         char* hash = strtok(NULL,";\n");
 
         strcpy(db[i]->ip,ip);
+        strcpy(db[i]->name,name);
         strcpy(db[i]->type,type);
         strcpy(db[i]->hash,hash);
 
@@ -66,6 +70,7 @@ void freeDB(db_entry** db) {
 
     for (i = 0; i < DB_SIZE; i++) {
         free(db[i]->ip);
+        free(db[i]->name);
         free(db[i]->type);
         free(db[i]->hash);
 

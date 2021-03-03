@@ -13,7 +13,7 @@ int main(int argc, char const *argv[])
     
     char* keyWords1[] = { "vacances" , "ennui" };
     char* keyWords2[] = { "surcoté" };
-    char* keyWords3[] = { "no_match" , "surcoté" };
+    char* keyWords3[] = { "vacances" , "surcoté" };
 
     db_t* selection1 = searchByKeyWords(db,keyWords1,2);
     db_t* selection2 = searchByKeyWords(db,keyWords2,1);

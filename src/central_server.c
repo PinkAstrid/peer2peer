@@ -4,7 +4,10 @@
 #define SERV_PORT 1025
 
 int main()
-{
+{   
+    db_t* db = createDB("test/content.csv");    // On charge la base de donnée du serveur
+    char* keyWords[1]; // vecteur temporaire pour essayer de récupérer des infos depuis le client
+
     int sockfd;
     char recvbuf[1500];
     char sendbuf[1500];
@@ -36,10 +39,25 @@ int main()
                 exit (1);
         } else {
             printf("Données reçues : %s\n",recvbuf);
+        
+
+            keyWords[0] = recvbuf;
+            db_t* selection = searchByKeyWords(db,keyWords,1);
             
-            strcpy(sendbuf,"ACK-");     // on renvoie le message reçu précédé de la chaine "ACK-"
-            strcat(sendbuf,recvbuf);
+
+            sendbuf[0] = '\0'; // On initialise le buffer pour pouvoir utiliser strcat et pour le vider avant nouvelle utilsation
+
+            if (selection->size > 0) {
+                for (int i = 0; i < selection->size; i++) {
+                    strcat(sendbuf,selection->entries[i]->name);
+                    strcat(sendbuf,"\n");
+                } 
+            } else {
+                strcpy(sendbuf,"Aucune entré de la base de donnée correspondant à cette entrée\n");
+            }
+
             sendto(sockfd, sendbuf, strlen(sendbuf),0, (struct sockaddr *)&serv_addr, serv_addr_len);
+            freeSelection(selection);
         }
     }
 }

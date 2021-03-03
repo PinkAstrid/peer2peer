@@ -1,5 +1,5 @@
 build:
-	gcc src/central_server.c -Wall -Wextra -o out/central_server
+	gcc src/central_server.c src/server_db.c -Wall -Wextra -o out/central_server
 	gcc src/peer.c -Wall -Wextra -o out/peer
 	@echo "Everything have been compiled"
 

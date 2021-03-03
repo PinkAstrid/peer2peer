@@ -30,7 +30,9 @@ int main()
     bzero(sendbuf,sizeof(sendbuf)); // IMPORTANT : on netttoie les deux buffers avant de les utiliser
     bzero(recvbuf,sizeof(recvbuf));
 
-    stpcpy(sendbuf,"PUBLISH : ici le contenu de la requête"); // ici on met en place le contenu de la requête
+    fgets(sendbuf,1500,stdin); // ici l'utilisateur entre le contenu de la requête
+
+    sendbuf[strlen(sendbuf)-1] = '\0'; // on retire le charactère \n (retour à la ligne)
 
     if (sendto(serverSocket, sendbuf, strlen(sendbuf), 0, (struct sockaddr*) &serv_addr, serv_addr_len) != strlen(sendbuf) ) {
         perror("Erreur : Problème lors de l'envoie des données");

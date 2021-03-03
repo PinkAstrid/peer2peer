@@ -1,26 +1,50 @@
 #include "server_db.h"
 
+/*
+        #############################
+        #                           #
+        #   CREATION / SUPRESSION   #
+        #                           #
+        #############################
+*/
 
-db_entry** createDB(char* csvName) {
-    int i;
-    
-    db_entry** db = calloc(DB_SIZE,sizeof(db_entry*));
+db_t* createDB(char* csvName) {
+    int size = countCSVLines(csvName);
 
-    for (i = 0; i < DB_SIZE; i++) {
-        db[i] = calloc(1,sizeof(db_entry));
-
-        db[i]->ip = calloc(IP_LEN,sizeof(char));
-        db[i]->name = calloc(NAMEL_LEN,sizeof(char));   // L'array de mots clé est initialisé dans la fonction fillDB car il
-
-        db[i]->type = calloc(TYPE_LEN,sizeof(char));    // faut connaitre leur nombre
-        db[i]->hash = calloc(HASH_LEN,sizeof(char));
+    if (size > MAX_DB_SIZE) {
+        printf("Erreur : nombre d'entrée du csv ( %d ) supérieur à la taille maximale autorisée ( %d )\n",size,MAX_DB_SIZE);
+        exit(12);
     }
 
-    fillDB(db,csvName);
+    db_t* db = calloc(1,sizeof(db_t));
+
+    db->size = size;
+    db->entries = createDB_entries(csvName, size);
+
     return db;
 }
 
-void fillDB(db_entry** db, char* csvName) {
+
+db_entry** createDB_entries(char* csvName, int dbSize) {
+    int i;
+    
+    db_entry** entries = calloc(dbSize,sizeof(db_entry*));
+
+    for (i = 0; i < dbSize; i++) {
+        entries[i] = calloc(1,sizeof(db_entry));
+
+        entries[i]->ip = calloc(IP_LEN,sizeof(char));
+        entries[i]->name = calloc(NAME_LEN,sizeof(char));   // L'array de mots clé est initialisé dans la fonction fillDB car il
+
+        entries[i]->type = calloc(TYPE_LEN,sizeof(char));    // faut connaitre leur nombre
+        entries[i]->hash = calloc(HASH_LEN,sizeof(char));
+    }
+
+    fillDB_entries(entries,csvName);
+    return entries;
+}
+
+void fillDB_entries(db_entry** entries, char* csvName) {
     int i = 0;
     char currentLine[TOTAL_ENTRY_LEN];
 
@@ -38,23 +62,25 @@ void fillDB(db_entry** db, char* csvName) {
         char* keyWords = strtok(NULL,";\n");
         char* hash = strtok(NULL,";\n");
 
-        strcpy(db[i]->ip,ip);
-        strcpy(db[i]->name,name);
-        strcpy(db[i]->type,type);
-        strcpy(db[i]->hash,hash);
+
+        strcpy(entries[i]->ip,ip);
+        strcpy(entries[i]->name,name);
+        strcpy(entries[i]->type,type);
+        strcpy(entries[i]->hash,hash);
 
         int keyWordNbr = countChar(keyWords,'/') + 1;       // on ajoute 1 au nombre de séparateur pour avoir le nombre de mots clé
-        db[i]->keyWordNbr = keyWordNbr;
-        db[i]->keyWords = calloc(keyWordNbr,sizeof(char*));
+        entries[i]->keyWordNbr = keyWordNbr;
+        entries[i]->keyWords = calloc(keyWordNbr,sizeof(char*));
+
 
         for (int j = 0; j < keyWordNbr; j++) {
-            db[i]->keyWords[j] = calloc(KEY_WORD_LEN,sizeof(char));
+            entries[i]->keyWords[j] = calloc(KEY_WORD_LEN,sizeof(char));
         }
 
         int k = 0;
         char* currentKeyWord = strtok(keyWords,"/");
         while (currentKeyWord != NULL) {
-            strcpy(db[i]->keyWords[k],currentKeyWord);
+            strcpy(entries[i]->keyWords[k],currentKeyWord);
             currentKeyWord = strtok(NULL,"/");
             k++;
         }
@@ -65,23 +91,99 @@ void fillDB(db_entry** db, char* csvName) {
     fclose(csvp);
 }
 
-void freeDB(db_entry** db) {
+void freeDB(db_t* db) {
     int i, j;
 
-    for (i = 0; i < DB_SIZE; i++) {
-        free(db[i]->ip);
-        free(db[i]->name);
-        free(db[i]->type);
-        free(db[i]->hash);
+    for (i = 0; i < db->size; i++) {
+        free(db->entries[i]->ip);
+        free(db->entries[i]->name);
+        free(db->entries[i]->type);
+        free(db->entries[i]->hash);
 
-        for (j = 0; j < db[i]->keyWordNbr; j++) {
-            free(db[i]->keyWords[j]);
+        for (j = 0; j < db->entries[i]->keyWordNbr; j++) {
+            free(db->entries[i]->keyWords[j]);
         }
-        free(db[i]->keyWords);
+        free(db->entries[i]->keyWords);
 
-        free(db[i]);
+        free(db->entries[i]);
     }
+    free(db->entries);
     free(db);
+}
+
+
+/*
+        #############################
+        #                           #
+        #         REQUETES          #
+        #                           #
+        #############################
+*/
+
+
+db_t* searchByKeyWords(db_t* db, char** keyWords, int keyWordsNbr) {
+
+    int selectedIds[db->size];              // Le vecteur selectedIds indique les id des db_entry de la db qui sont sélectionnés.
+                                            // Si selectedIds[i] == 1, c'est que l'entrée i de la db est sélectionnée, si selectedIds[i] == 0 elle ne l'est pas
+
+    for (int i = 0; i < db->size; i++) {    // On commence par considérer que toutes les entrées de la db sont valides
+        selectedIds[i] = 1;
+    }
+
+    for (int j = 0; j < keyWordsNbr; j++) {
+        selectIdsByKeyWord(db,selectedIds,keyWords[j]);   // Pour chaque mot clé, on retire des selectedIds les entrées qui ne correspondent pas
+    }
+
+    db_t* selection = calloc(1,sizeof(db_t));
+    selection->size = 0;
+
+    for (int k = 0; k < db->size; k++) {
+        selection->size += selectedIds[k];  // En sommant toutes les valeurs de selectedIds, on obtient le nombre final d'entrées sélectionnées
+    }
+    
+    selection->entries = calloc(selection->size,sizeof(db_entry*));
+    int selectionEntriesCount = 0;
+
+    for (int l = 0; l < db->size; l++) {
+        if (selectedIds[l]) {
+            selection->entries[selectionEntriesCount] = db->entries[l]; // La selection n'est donc qu'une collection de pointeur vers des entrées de la db
+            selectionEntriesCount++;                                    // Il suffira donc de free cet ensemble de pointeur une fois l'utilisation terminée
+        }                                                               // et il ne faudra donc pas free les db_entry elles mêmes
+    }
+
+    return selection;
+}
+
+void selectIdsByKeyWord(db_t* db, int* selectedIds, char* keyWord) {    // met à jour le vecteur de selection selectedIds
+    for (int i = 0; i < db->size; i++) {
+        if (selectedIds[i]) {
+            if(!isInKeyWords(db->entries[i],keyWord)) {
+                selectedIds[i] = 0;
+            }
+        }
+    }
+}
+
+void freeSelection(db_t* selection) {   // Les selection ne sont qu'une collection de pointeurs vers des entrées de la db, on ne free donc que ces pointeurs
+    free(selection->entries);           // et non les db_entry elles mêmes
+    free(selection);
+}
+
+/*
+        #############################
+        #                           #
+        #    FONCTIONS BASIQUES     #
+        #                           #
+        #############################
+*/
+
+int isInKeyWords(db_entry* entry, char* word) {     // renvoi 1 si le mot est un des mot clé de l'entrée, 0 sinon
+    for (int i = 0; i < entry->keyWordNbr; i++) {
+        if (strcmp(entry->keyWords[i],word) == 0) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int countChar(char* str, char selection) {
@@ -92,4 +194,26 @@ int countChar(char* str, char selection) {
         }
     }
     return count;
+}
+
+int countCSVLines(char* csvName) {
+    int lines = 0;
+    char c;
+
+    FILE* f = fopen(csvName,"r");
+
+    if (f == NULL) {
+        perror("Erreur : Pointeur null lors de l'ouverture du fichier csv");
+        exit(11);
+    }
+
+    while(!feof(f)) {
+        c = fgetc(f);
+        if(c == '\n') {
+            lines++;
+        }
+    }
+
+    fclose(f);
+    return lines;
 }

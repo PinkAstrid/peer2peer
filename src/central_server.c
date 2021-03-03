@@ -39,13 +39,13 @@ int main()
                 exit (1);
         } else {
             printf("Données reçues : %s\n",recvbuf);
-        
 
             keyWords[0] = recvbuf;
             db_t* selection = searchByKeyWords(db,keyWords,1);
             
 
-            sendbuf[0] = '\0'; // On initialise le buffer pour pouvoir utiliser strcat et pour le vider avant nouvelle utilsation
+            //sendbuf[0] = '\0'; // On initialise le buffer pour pouvoir utiliser strcat et pour le vider avant nouvelle utilsation
+
 
             if (selection->size > 0) {
                 for (int i = 0; i < selection->size; i++) {
@@ -58,6 +58,9 @@ int main()
 
             sendto(sockfd, sendbuf, strlen(sendbuf),0, (struct sockaddr *)&serv_addr, serv_addr_len);
             freeSelection(selection);
+
+            bzero(recvbuf,sizeof(recvbuf));  // on nettoie les buffers
+            bzero(sendbuf,sizeof(recvbuf));
         }
     }
 }

@@ -10,3 +10,5 @@
 #include     <netdb.h>
 #include     <stdlib.h>
 #include     <strings.h>
+
+int addFileToServer();

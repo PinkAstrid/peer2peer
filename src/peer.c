@@ -50,3 +50,48 @@ int main()
 
     return 0;
 }
+
+int addFileToServer(){
+    //Préparation des données
+    char* bufferstdin = malloc(1500*sizeof(char));
+    char* filePath = malloc(1500*sizeof(char));
+    char* keyWords = malloc(10*50*sizeof(char)); //tableau de strings (de taille 50 maximum chacun)
+    
+    //Récupération du fichier
+    printf("Veuillez entrer le chemin du fichier à envoyer.\n");
+    fgets(filePath,1500, stdin); 
+    filePath[strlen(filePath)-1]="\0"; //suppression du charactère \n
+
+    FILE* sentFile;
+    if(!(sentFile = fopen(filePath, "r"))){
+        perror("Erreur : le fichier que vous voulez envoyer n'existe pas");
+    }
+        
+    //Récupération des mots-clef
+    printf("Veuillez entrer les mots-clef correspondant au fichier en les séparant par un espace.");
+    fgets(bufferstdin, 1500, stdin); 
+    bufferstdin[strlen(bufferstdin)-1]="\0"; //suppression du charactère \n
+
+    int countKeyWord = 0;
+    char* tinyBuffer = malloc(50);
+    tinyBuffer = strtok(bufferstdin, " ");
+
+    while (countKeyWord<10 && tinyBuffer!=NULL) //Tant qu'on ne dépasse pas le nb max de mot-clef et qu'il en reste à récupérer
+    {
+        strcpy(keyWords[countKeyWord*50],tinyBuffer); //copie du mot-clef
+        tinyBuffer = strtok(NULL, " "); //Mot-clé suivant
+        countKeyWord++; //emplacement suivant
+    }
+
+    free(tinyBuffer);
+
+    //On a récupérer le fichier s'il existe et les mots-clefs
+    //TODO : récup l'adresse IP, envoyer, la récupération depuis le serveur, insertion dans le pgm    
+
+
+    //Libération avant sortie
+    free(bufferstdin); free(filePath); free(keyWords);
+
+    //Fin du add
+    return 0;
+}

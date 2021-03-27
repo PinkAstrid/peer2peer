@@ -123,13 +123,15 @@ char* addFileToServer(){
     free(tinyBuffer);
 
     //On a récupérer le fichier s'il existe et les mots-clefs
-    //Préparation de l'envoi : flagEnvoi/filePath/mot1/mot2/mot3
+    //Préparation de l'envoi : flagEnvoi;filePath;mot1;mot2;mot3
     char* bufferEnvoi = malloc(1500*sizeof(char));
     strcpy(bufferEnvoi, "PUBLISH : ");
-    strcat(bufferEnvoi,filePath); strcat(bufferEnvoi, "/");
+    strcat(bufferEnvoi,filePath); strcat(bufferEnvoi, ";");
     for (int i=0; i<countKeyWord; i++){
-        strcat(bufferEnvoi,keyWords+i*50); strcat(bufferEnvoi, "/");
+        strcat(bufferEnvoi,keyWords+i*50); strcat(bufferEnvoi, ";");
     }
+
+    //manque le hash
 
     //Libération avant sortie
     free(bufferstdin); free(filePath); free(keyWords);

@@ -7,9 +7,9 @@ int main()
 {
     int serverSocket, recvSize, ttl;
     struct sockaddr_in serv_addr;
-    char sendbuf[1500];
+    char* sendbuf;
     char recvbuf[1500];
-    char userEntry[1400];
+    char* userEntry = malloc(1400 * sizeof(char));
     int serv_addr_len = sizeof(serv_addr);
 
     bzero(&serv_addr, sizeof(serv_addr));
@@ -18,20 +18,21 @@ int main()
     serv_addr.sin_port = htons(SERV_PORT);
 
     char searchReqHeader[] = "SEARCH : ";
-    char publishReqHeader[] = "PUBLISH : ";
 
     if ( (serverSocket = socket(PF_INET, SOCK_DGRAM, 0)) < 0 ) {
         perror("Erreur : Probèle lors du lancement de la socket serveur");
+        free(userEntry);
         exit(1);
     }
 
     ttl = 1;
     if (setsockopt(serverSocket, IPPROTO_IP, IP_TTL, &ttl, sizeof(ttl)) < 0) {
         perror("Erreur : Problème lors de la mise en place du ttl");
+        free(userEntry);
         exit(2);
     }
 
-    bzero(sendbuf,sizeof(sendbuf)); // IMPORTANT : on netttoie les deux buffers avant de les utiliser
+    // IMPORTANT : on netttoie les deux buffers avant de les utiliser
     bzero(recvbuf,sizeof(recvbuf));
 
     char choice = 'a';              // On aura : choice = 1 -> recherche par mots clés | choice = 2 -> ajout d'un fichier
@@ -52,34 +53,29 @@ int main()
 
     if (choice == '1') {
         printf("Entrez le mot clé :\n");
+        fgets(userEntry,1400,stdin); // ici l'utilisateur entre le contenu de la requête
+        userEntry[strlen(userEntry)-1] = '\0'; // on retire le charactère '\n' (retour à la ligne)
+        sendbuf = malloc(1500*sizeof(char));
+        strcpy(sendbuf, searchReqHeader);
+        strcat(sendbuf, userEntry);
     }
 
     if (choice == '2') {
-        printf("Entrez le chemin du fichier :\n");
+        sendbuf = addFileToServer();
     }
 
-    fgets(userEntry,1400,stdin); // ici l'utilisateur entre le contenu de la requête
     //while(getchar() != '\n') {}  // on vide le buffer de stdin // inutile pour le moment car on relance peer à chaque fois, mais sera utile plus tard;
 
-    userEntry[strlen(userEntry)-1] = '\0'; // on retire le charactère '\n' (retour à la ligne)
-
-    if (choice == '1') {
-        strcpy(sendbuf,searchReqHeader);
-    }
-
-    if (choice == '2') {
-        strcpy(sendbuf,publishReqHeader);
-    }
-
-    strcat(sendbuf,userEntry);
-
+    
     if (sendto(serverSocket, sendbuf, strlen(sendbuf), 0, (struct sockaddr*) &serv_addr, serv_addr_len) != strlen(sendbuf) ) {
         perror("Erreur : Problème lors de l'envoie des données");
+        free(sendbuf); free(userEntry);
         exit(3);
     }
 
     if ( (recvSize = recvfrom(serverSocket, recvbuf, sizeof(recvbuf)-1, 0, (struct sockaddr*) &serv_addr, &serv_addr_len)) < 0) {
         perror("Erreur : Problème lors de la réception des données du serveur");
+        free(sendbuf); free(userEntry);
         exit(4);
     }
 
@@ -87,10 +83,12 @@ int main()
     printf("Message reçu du serveur : %s\n", recvbuf);
     close(serverSocket);
 
+    free(sendbuf); free(userEntry);
+
     return 0;
 }
 
-int addFileToServer(){
+char* addFileToServer(){
     //Préparation des données
     char* bufferstdin = malloc(1500*sizeof(char));
     char* filePath = malloc(1500*sizeof(char));
@@ -117,7 +115,7 @@ int addFileToServer(){
 
     while (countKeyWord<10 && tinyBuffer!=NULL) //Tant qu'on ne dépasse pas le nb max de mot-clef et qu'il en reste à récupérer
     {
-        strcpy(keyWords[countKeyWord*50],tinyBuffer); //copie du mot-clef
+        strcpy(keyWords+countKeyWord*50,tinyBuffer); //copie du mot-clef
         tinyBuffer = strtok(NULL, " "); //Mot-clé suivant
         countKeyWord++; //emplacement suivant
     }
@@ -125,12 +123,17 @@ int addFileToServer(){
     free(tinyBuffer);
 
     //On a récupérer le fichier s'il existe et les mots-clefs
-    //TODO : récup l'adresse IP, envoyer, la récupération depuis le serveur, insertion dans le pgm    
-
+    //Préparation de l'envoi : flagEnvoi/filePath/mot1/mot2/mot3
+    char* bufferEnvoi = malloc(1500*sizeof(char));
+    strcpy(bufferEnvoi, "PUBLISH : ");
+    strcat(bufferEnvoi,filePath); strcat(bufferEnvoi, "/");
+    for (int i=0; i<countKeyWord; i++){
+        strcat(bufferEnvoi,keyWords+i*50); strcat(bufferEnvoi, "/");
+    }
 
     //Libération avant sortie
     free(bufferstdin); free(filePath); free(keyWords);
 
     //Fin du add
-    return 0;
+    return bufferEnvoi;
 }

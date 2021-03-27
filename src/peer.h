@@ -11,4 +11,4 @@
 #include     <stdlib.h>
 #include     <strings.h>
 
-int addFileToServer();
+char* addFileToServer();

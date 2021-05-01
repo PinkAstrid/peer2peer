@@ -92,16 +92,41 @@ void UDP_search(int port) {
     recvbuf[recvSize] = '\0';
     //printf("[*] UDP - client : Message reçu : {%s}\n", recvbuf);
     //printf("recvsize : %d\n",recvSize);
-    int nbrOfResults = countChar(recvbuf, '\n');
-    char* endLine;
-    char* spaces;
-    char* result = strtok_r(recvbuf, "\n", &endLine);
-    char* isolatedName = strtok_r(result, " ", &spaces);
+    if (strcmp("Aucune entré de la base de donnée correspondant à ces mots-clé\n", recvbuf)) {
+        int nbrOfResults = countChar(recvbuf, '\n');
+        char* endLine;
+        char* spaces;
+        char* result = strtok_r(recvbuf, "\n", &endLine);
+        char* isolatedName = strtok_r(result, " ", &spaces);
 
-    for (int i = 0; i < nbrOfResults; i++) { 
-        printf("        (%d) %s\n",i+1, getNameFromPath(isolatedName));
-        result = strtok_r(NULL, "\n", &endLine);
-        isolatedName = strtok_r(result, " ", &spaces);
+        for (int i = 0; i < nbrOfResults; i++) { 
+            printf("        (%d) %s\n",i+1, getNameFromPath(isolatedName));
+            result = strtok_r(NULL, "\n", &endLine);
+            isolatedName = strtok_r(result, " ", &spaces);
+        }
+
+        printf("\n\nEntrez le numéro associé au fichier que vous voulez télécharger (entrez 0 pour n'en prendre aucun) : ");
+        char selectedFile[2];
+        fgets(selectedFile,2,stdin);
+        selectedFile[1] = '\0'; // on retire le \n
+
+        //printf("ICI ? %s\n");
+        while (atoi(selectedFile) > nbrOfResults) {
+            printf("\n\nEntrée invalide");
+            printf("\n\nEntrez le numéro associé au fichier que vous voulez télécharger (entrez 0 pour n'en prendre aucun) : ");
+            fgets(selectedFile,2,stdin);
+            selectedFile[1] = '\0'; // on retire le \n
+        }
+
+        if (atoi(selectedFile) == 0) {
+            return;
+        } else {
+            printf("Vous avez choisi le retour %d, bravo à vous\n");
+        }
+
+
+    } else {
+        printf("Aucune entré de la base de donnée correspondant à ces mots-clé\n");
     }
 
     close(socket_server);

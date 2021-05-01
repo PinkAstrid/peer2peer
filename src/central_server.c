@@ -79,7 +79,7 @@ int main()
                         strcat(sendbuf,"\n");
                     } 
                 } else {
-                    strcpy(sendbuf,"Aucune entré de la base de donnée correspondant à cette entrée\n");
+                    strcpy(sendbuf,"Aucune entré de la base de donnée correspondant à ces mots-clé\n");
                 }
 
 

@@ -36,6 +36,7 @@ int main()
         exit (1);
     }
 
+    bzero((char *) &cli_addr, sizeof(cli_addr));
     bzero((char *) &serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = PF_INET;
     serv_addr.sin_addr.s_addr = inet_addr(SERV_IP);
@@ -95,4 +96,50 @@ int main()
             bzero(sendbuf,sizeof(recvbuf));
         }
     }
+}
+
+char* newData(char* envoi, struct sockaddr_in client_addr){
+    char* buffer = malloc(500* sizeof(char));
+    char* newLine = malloc(1500*sizeof(char));
+
+    //Recupération de l'IP
+    long ip = client_addr.sin_addr.s_addr;
+    snprintf(newLine, "%lu", ip); strcat(newLine, ";");
+
+    
+    //Récupération des informations liée au nouveau document
+    //On choppe le file path
+    buffer = strtok(envoi, ";");
+
+    //Récup du type et du nom
+    char* tipeBuffer;
+    char* nom = malloc(50*sizeof(char));
+    tipeBuffer = strtok(buffer,"/");
+    while (tipeBuffer!=NULL)
+    {
+        strcpy(nom, tipeBuffer);
+        tipeBuffer = strtok(NULL, "/");
+    }
+
+    tipeBuffer = malloc(50*sizeof(char));
+    strcpy(tipeBuffer, nom);
+    tipeBuffer = strtok(nom, ".");
+    tipeBuffer = strtok(NULL, "."); //on a récupéré le type
+    
+    strcat(newLine, nom); strcat(newLine, ";"); strcat(newLine, tipeBuffer); strcat(newLine, ";");
+    free(tipeBuffer); free(nom);
+
+    //Récupération des mots clés
+    buffer = strtok(NULL, ";");
+    while (buffer!=NULL) //Tant qu'on ne dépasse pas le nb max de mot-clef et qu'il en reste à récupérer
+    {
+        strcat(newLine, buffer); strcat(newLine, "/"); //copie du mot-clef
+        buffer = strtok(NULL, ";"); //Mot-clé suivant
+    }
+
+    //manque le hash
+
+    strcat(newLine, "\n");
+
+    return newLine;
 }

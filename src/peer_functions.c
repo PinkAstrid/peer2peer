@@ -272,7 +272,7 @@ void TCP_client(int port) {
 }
 
 
-void UDP_client(int port) {
+void UDP_search(int port) {
     int socket_server, recvSize, ttl;
     struct sockaddr_in serv_addr;
     char sendbuf[1500];
@@ -282,7 +282,6 @@ void UDP_client(int port) {
     struct hostent *hp;
 
     char searchReqHeader[] = "SEARCH ";
-    char publishReqHeader[] = "PUBLISH ";
 
     if ((socket_server = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
         printf("[*] UDP - client : Erreur lors du lancement du socket\n");

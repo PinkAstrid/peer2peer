@@ -25,7 +25,7 @@ int main(int argc, char const *argv[]) {
             while (getchar() != '\n') {} // on vide le buffer de stdin
 
             if (choice=='1')
-                UDP_client(1025);
+                UDP_search(1025);
 
 
             if (choice=='2')

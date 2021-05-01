@@ -32,12 +32,11 @@ db_entry** createDB_entries(char* csvName, int dbSize) {
 
     for (i = 0; i < dbSize; i++) {
         entries[i] = calloc(1,sizeof(db_entry));
-
-        entries[i]->ip = calloc(IP_LEN,sizeof(char));
-        entries[i]->name = calloc(NAME_LEN,sizeof(char));   // L'array de mots clé est initialisé dans la fonction fillDB car il
-
-        entries[i]->type = calloc(TYPE_LEN,sizeof(char));    // faut connaitre leur nombre
-        entries[i]->hash = calloc(HASH_LEN,sizeof(char));
+                                                                // on ajoute 1 pour le null byte de fin de chaine, dans le cas ou la chaine à la taille maximale
+        entries[i]->ip = calloc(IP_LEN + 1,sizeof(char));
+        entries[i]->name = calloc(NAME_LEN + 1,sizeof(char));   // L'array de mots clé est initialisé dans la fonction fillDB car il
+        entries[i]->type = calloc(TYPE_LEN + 1,sizeof(char));    // faut connaitre leur nombre
+        entries[i]->hash = calloc(HASH_LEN + 1,sizeof(char));
     }
 
     fillDB_entries(entries,csvName);
@@ -56,6 +55,7 @@ void fillDB_entries(db_entry** entries, char* csvName) {
     }
 
     while(fgets(currentLine, TOTAL_ENTRY_LEN, csvp) != NULL) {
+        //printf("current line : {%s}\n",currentLine);
         char* ip = strtok(currentLine,";\n");
         char* name = strtok(NULL,";\n");
         char* type = strtok(NULL,";\n");
@@ -68,13 +68,14 @@ void fillDB_entries(db_entry** entries, char* csvName) {
         strcpy(entries[i]->type,type);
         strcpy(entries[i]->hash,hash);
 
+
         int keyWordNbr = countChar(keyWords,'/') + 1;       // on ajoute 1 au nombre de séparateur pour avoir le nombre de mots clé
         entries[i]->keyWordNbr = keyWordNbr;
         entries[i]->keyWords = calloc(keyWordNbr,sizeof(char*));
-
+        
 
         for (int j = 0; j < keyWordNbr; j++) {
-            entries[i]->keyWords[j] = calloc(KEY_WORD_LEN,sizeof(char));
+            entries[i]->keyWords[j] = calloc(KEY_WORD_LEN + 1,sizeof(char));
         }
 
         int k = 0;
@@ -123,7 +124,7 @@ void freeDB(db_t* db) {
 
 db_t* searchByKeyWords(db_t* db, char** keyWords, int keyWordsNbr) {
 
-    int selectedIds[db->size];              // Le vecteur selectedIds indique les id des db_entry de la db qui sont sélectionnés.
+    int* selectedIds = malloc(db->size * sizeof(int));              // Le vecteur selectedIds indique les id des db_entry de la db qui sont sélectionnés.
                                             // Si selectedIds[i] == 1, c'est que l'entrée i de la db est sélectionnée, si selectedIds[i] == 0 elle ne l'est pas
 
     for (int i = 0; i < db->size; i++) {    // On commence par considérer que toutes les entrées de la db sont valides
@@ -133,6 +134,7 @@ db_t* searchByKeyWords(db_t* db, char** keyWords, int keyWordsNbr) {
     for (int j = 0; j < keyWordsNbr; j++) {
         selectIdsByKeyWord(db,selectedIds,keyWords[j]);   // Pour chaque mot clé, on retire des selectedIds les entrées qui ne correspondent pas
     }
+
 
     db_t* selection = calloc(1,sizeof(db_t));
     selection->size = 0;
@@ -151,6 +153,8 @@ db_t* searchByKeyWords(db_t* db, char** keyWords, int keyWordsNbr) {
         }                                                               // et il ne faudra donc pas free les db_entry elles mêmes
     }
 
+    free(selectedIds);
+
     return selection;
 }
 
@@ -167,6 +171,68 @@ void selectIdsByKeyWord(db_t* db, int* selectedIds, char* keyWord) {    // met �
 void freeSelection(db_t* selection) {   // Les selection ne sont qu'une collection de pointeurs vers des entrées de la db, on ne free donc que ces pointeurs
     free(selection->entries);           // et non les db_entry elles mêmes
     free(selection);
+}
+
+void addEntry(db_t* db, char* receivedString,char* senderIP ,char* csvName) {  // on traite sur la chaine sans le header, donc uniquement les valeurs séparées par des espaces
+    //printf("ON ENTRE\n");
+    char* name = strtok(receivedString, " ");
+    //printf("premier tok OK\n");
+    char* type = strtok(NULL, " ");
+    char* keyWords = strtok(NULL, " ");
+    char* hash = strtok(NULL, " ");
+
+    
+    printf("[*]     ip        : %s\n", senderIP);
+    printf("[*]     name      : %s\n", name);
+    printf("[*]     extension : %s\n", type);
+    printf("[*]     keywords  : %s\n", keyWords);
+    printf("[*]     hash      : %s\n", hash);
+    
+
+    char* newEntry = malloc(TOTAL_ENTRY_LEN * sizeof(char));
+    strcpy(newEntry, senderIP);
+    strcat(newEntry, ";");
+    strcat(newEntry, name);
+    strcat(newEntry, ";");
+    strcat(newEntry, type);
+    strcat(newEntry, ";");
+    strcat(newEntry, keyWords);
+    strcat(newEntry, ";");
+    strcat(newEntry, hash);
+
+    FILE* fcsv = fopen(csvName,"a");       // "a" pour append, on écrit à la fin du fichier
+    fprintf(fcsv, "%s\n",newEntry);
+    fclose(fcsv);
+
+    db->size++;
+    db->entries = realloc(db->entries, db->size * sizeof(db_entry));
+    db->entries[db->size-1] = calloc(1,sizeof(db_entry));
+    db->entries[db->size-1]->ip = calloc(IP_LEN + 1, sizeof(char));
+    strcpy(db->entries[db->size-1]->ip,senderIP);
+    db->entries[db->size-1]->name = calloc(NAME_LEN + 1, sizeof(char));
+    strcpy(db->entries[db->size-1]->name,name);
+    db->entries[db->size-1]->type = calloc(TYPE_LEN + 1, sizeof(char));
+    strcpy(db->entries[db->size-1]->type,type);
+    db->entries[db->size-1]->hash = calloc(HASH_LEN + 1, sizeof(char));
+    strcpy(db->entries[db->size-1]->hash,hash);
+
+    int keyWordNbr = countChar(keyWords,'/') + 1;       // on ajoute 1 au nombre de séparateur pour avoir le nombre de mots clé
+    db->entries[db->size-1]->keyWordNbr = keyWordNbr;
+    db->entries[db->size-1]->keyWords = calloc(keyWordNbr,sizeof(char*));
+
+        
+    for (int j = 0; j < keyWordNbr; j++) {
+        db->entries[db->size-1]->keyWords[j] = calloc(KEY_WORD_LEN + 1,sizeof(char));
+    }
+
+
+    int k = 0;
+    char* currentKeyWord = strtok(keyWords,"/");
+    while (currentKeyWord != NULL) {
+        strcpy(db->entries[db->size-1]->keyWords[k],currentKeyWord);
+        currentKeyWord = strtok(NULL,"/");
+        k++;
+    }
 }
 
 /*

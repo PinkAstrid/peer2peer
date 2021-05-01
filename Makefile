@@ -1,16 +1,21 @@
-build:
-	gcc src/central_server.c src/server_db.c -Wall -Wextra -o out/central_server
-	gcc src/peer.c -Wall -Wextra -o out/peer
-	@echo "Everything have been compiled"
+peer:
+	cd src;gcc -c peer.c -Wall
+	cd src;gcc -c peer_functions.c -Wall -lssl -lcrypto
+	cd src;gcc peer_functions.o peer.o -o ../peer -Wall -lssl -lcrypto
+	@echo "peer compilé"
+
 
 clean:
-	rm out/*
+	rm src/*.o
+	rm peer
+	rm central_server
+	@echo "Nettoyage terminé"
 
 central_server:
-	out/central_server
-
-peer:
-	out/peer
+	cd src;gcc -c central_server.c -Wall
+	cd src;gcc -c server_db.c -Wall
+	cd src;gcc server_db.o central_server.o -o ../central_server -Wall
+	@echo "central_server compilé"
 
 all:
 	@out/central_server & echo "central_server launched, PID : $$!"

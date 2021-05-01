@@ -4,7 +4,7 @@
 #include <strings.h>
 #include <string.h>
 
-#define MAX_DB_SIZE 5
+#define MAX_DB_SIZE 100
 #define IP_LEN 15           // dans le cas le plus long : XXX.XXX.XXX.XXX
 #define NAME_LEN 200       // nom du fichier partagé
 #define TYPE_LEN 5          // mp3, jpeg ...
@@ -43,6 +43,7 @@ void freeDB(db_t* db);
 db_t* searchByKeyWords(db_t* db, char** keyWords, int keyWordsNbr);
 void selectIdsByKeyWord(db_t* db, int* selectedIds, char* keyWord);
 void freeSelection(db_t* selection);
+void addEntry(db_t* db, char* receivedString,char* senderIP ,char* csvName);
 
 
 /// FONCTIONS BASIQUES ///

@@ -50,3 +50,4 @@ void addEntry(db_t* db, char* receivedString,char* senderIP ,char* csvName);
 int isInKeyWords(db_entry* entry, char* word);
 int countChar(char* str, char selection);
 int countCSVLines(char* csvName);
+char* getNameFromPath(char* filePath);

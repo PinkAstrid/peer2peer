@@ -26,3 +26,4 @@ void UDP_search(int port);
 void UDP_publish();
 char* hash_file(char* filePath);
 int countChar(char* str, char selection);
+char* getNameFromPath(char* filePath);

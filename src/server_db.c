@@ -183,7 +183,7 @@ void addEntry(db_t* db, char* receivedString,char* senderIP ,char* csvName) {  /
 
     
     printf("[*]     ip        : %s\n", senderIP);
-    printf("[*]     name      : %s\n", name);
+    printf("[*]     name      : %s\n", getNameFromPath(name));
     printf("[*]     extension : %s\n", type);
     printf("[*]     keywords  : %s\n", keyWords);
     printf("[*]     hash      : %s\n", hash);
@@ -208,12 +208,13 @@ void addEntry(db_t* db, char* receivedString,char* senderIP ,char* csvName) {  /
     db->entries = realloc(db->entries, db->size * sizeof(db_entry));
     db->entries[db->size-1] = calloc(1,sizeof(db_entry));
     db->entries[db->size-1]->ip = calloc(IP_LEN + 1, sizeof(char));
-    strcpy(db->entries[db->size-1]->ip,senderIP);
     db->entries[db->size-1]->name = calloc(NAME_LEN + 1, sizeof(char));
-    strcpy(db->entries[db->size-1]->name,name);
     db->entries[db->size-1]->type = calloc(TYPE_LEN + 1, sizeof(char));
-    strcpy(db->entries[db->size-1]->type,type);
     db->entries[db->size-1]->hash = calloc(HASH_LEN + 1, sizeof(char));
+    
+    strcpy(db->entries[db->size-1]->ip,senderIP);
+    strcpy(db->entries[db->size-1]->name,name);
+    strcpy(db->entries[db->size-1]->type,type);
     strcpy(db->entries[db->size-1]->hash,hash);
 
     int keyWordNbr = countChar(keyWords,'/') + 1;       // on ajoute 1 au nombre de séparateur pour avoir le nombre de mots clé
@@ -282,4 +283,14 @@ int countCSVLines(char* csvName) {
 
     fclose(f);
     return lines;
+}
+
+char* getNameFromPath(char* filePath) {
+    char* name = strrchr(filePath, '/'); // on récupère le nom du fichier seul
+    if (name == NULL) {   // cas ou il n'y a pas de slash, donc directement le nom du fichier
+        name = filePath;
+    } else {
+        name += 1;
+    }
+    return name;
 }

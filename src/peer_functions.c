@@ -52,6 +52,61 @@ int recv_tcp(int socket, char* buffer, int buff_size) {
 
 ///////////////////////////////////////// FONCTIONS REQUETES
 
+void UDP_search(int port) {
+    int socket_server, recvSize, ttl;
+    struct sockaddr_in serv_addr;
+    char sendbuf[1500];
+    char recvbuf[1500];
+    char userEntry[1400];
+    int serv_addr_len = sizeof(serv_addr);
+    struct hostent *hp;
+
+    char searchReqHeader[] = "SEARCH ";
+
+    if ((socket_server = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
+        printf("[*] UDP - client : Erreur lors du lancement du socket\n");
+        exit(1);
+    }
+
+    memset(&serv_addr, 0, sizeof(serv_addr));
+    serv_addr.sin_family = PF_INET;
+    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serv_addr.sin_port = htons(port);
+
+    printf("Entrez le mot clé :\n");
+    fgets(userEntry,1400,stdin);
+    userEntry[strlen(userEntry)-1] = '\0';
+
+    strcpy(sendbuf, searchReqHeader);
+    strcat(sendbuf,userEntry);
+
+
+    if (sendto(socket_server, sendbuf, strlen(sendbuf), 0, (struct sockaddr*) &serv_addr, serv_addr_len) != strlen(sendbuf) ) {
+        printf("[*] UDP - client : Erreur lors de l'envoi\n");
+    }
+
+    if ((recvSize = recvfrom(socket_server, recvbuf, sizeof(recvbuf)-1, 0, (struct sockaddr*) &serv_addr, &serv_addr_len)) < 0) {
+        printf("[*] UDP - client : Erreur lors de la reception\n");
+    }
+    
+    recvbuf[recvSize] = '\0';
+    //printf("[*] UDP - client : Message reçu : {%s}\n", recvbuf);
+    //printf("recvsize : %d\n",recvSize);
+    int nbrOfResults = countChar(recvbuf, '\n');
+    char* endLine;
+    char* spaces;
+    char* result = strtok_r(recvbuf, "\n", &endLine);
+    char* isolatedName = strtok_r(result, " ", &spaces);
+
+    for (int i = 0; i < nbrOfResults; i++) { 
+        printf("        (%d) %s\n",i+1, getNameFromPath(isolatedName));
+        result = strtok_r(NULL, "\n", &endLine);
+        isolatedName = strtok_r(result, " ", &spaces);
+    }
+
+    close(socket_server);
+}
+
 void UDP_publish(int port) {
     
     printf("[*] UDP - client : Entrez le chemin du fichier à envoyer : ");
@@ -69,15 +124,7 @@ void UDP_publish(int port) {
     }
     close(sentFile);
 
-    
-    char* name = strrchr(filePath, '/'); // on récupère le nom du fichier seul
-    if (name == NULL) {   // cas ou il n'y a pas de slash, donc directement le nom du fichier
-        name = filePath;
-    } else {
-        name += 1;
-    }
-
-    char* extension = strrchr(name, '.') + 1;
+    char* extension = strrchr(filePath, '.') + 1;
     
     //Récupération des mots-clef
     printf("[*] UDP - client : Entrez les mots-clef correspondant au fichier en les séparant par des slashs sans espaces :\n");
@@ -92,7 +139,7 @@ void UDP_publish(int port) {
     }
 
     char* bufferEnvoi = malloc(MAX_SIZE_PUBLISH * sizeof(char));
-    sprintf(bufferEnvoi, "PUBLISH %s %s %s %s", name, extension, keywords, hash);
+    sprintf(bufferEnvoi, "PUBLISH %s %s %s %s", filePath, extension, keywords, hash);
 
     int socket_server, recvSize, ttl;
     struct sockaddr_in serv_addr;
@@ -271,57 +318,6 @@ void TCP_client(int port) {
     close(tcp_socketfd);
 }
 
-
-void UDP_search(int port) {
-    int socket_server, recvSize, ttl;
-    struct sockaddr_in serv_addr;
-    char sendbuf[1500];
-    char recvbuf[1500];
-    char userEntry[1400];
-    int serv_addr_len = sizeof(serv_addr);
-    struct hostent *hp;
-
-    char searchReqHeader[] = "SEARCH ";
-
-    if ((socket_server = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {
-        printf("[*] UDP - client : Erreur lors du lancement du socket\n");
-        exit(1);
-    }
-
-    memset(&serv_addr, 0, sizeof(serv_addr));
-    serv_addr.sin_family = PF_INET;
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    serv_addr.sin_port = htons(port);
-
-    printf("Entrez le mot clé :\n");
-    fgets(userEntry,1400,stdin);
-    userEntry[strlen(userEntry)-1] = '\0';
-
-    strcpy(sendbuf, searchReqHeader);
-    strcat(sendbuf,userEntry);
-
-
-    if (sendto(socket_server, sendbuf, strlen(sendbuf), 0, (struct sockaddr*) &serv_addr, serv_addr_len) != strlen(sendbuf) ) {
-        printf("[*] UDP - client : Erreur lors de l'envoi\n");
-    }
-
-    if ((recvSize = recvfrom(socket_server, recvbuf, sizeof(recvbuf)-1, 0, (struct sockaddr*) &serv_addr, &serv_addr_len)) < 0) {
-        printf("[*] UDP - client : Erreur lors de la reception\n");
-    }
-    
-    recvbuf[recvSize] = '\0';
-    //printf("[*] UDP - client : Message reçu : {%s}\n", recvbuf);
-    //printf("recvsize : %d\n",recvSize);
-    int nbrOfResults = countChar(recvbuf, '\n');
-    char* result = strtok(recvbuf, "\n");
-    for (int i = 0; i < nbrOfResults; i++) {
-        printf("        (%d) %s\n",i+1,result);
-        result = strtok(NULL, "\n");
-    }
-
-    close(socket_server);
-}
-
 char* hash_file(char* filePath)
 {
     char* result = malloc((SHA_DIGEST_LENGTH + 1) * 2);
@@ -364,4 +360,14 @@ int countChar(char* str, char selection) {
         }
     }
     return count;
+}
+
+char* getNameFromPath(char* filePath) {
+    char* name = strrchr(filePath, '/'); // on récupère le nom du fichier seul
+    if (name == NULL) {   // cas ou il n'y a pas de slash, donc directement le nom du fichier
+        name = filePath;
+    } else {
+        name += 1;
+    }
+    return name;
 }

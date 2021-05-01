@@ -70,8 +70,12 @@ int main()
 
                 if (selection->size > 0) {
                     for (int i = 0; i < selection->size; i++) {
-                        printf("resulat courant : {%s}\n",selection->entries[i]->name);
+                        //printf("resulat courant : {%s}\n",selection->entries[i]->name);
                         strcat(sendbuf,selection->entries[i]->name);
+                        strcat(sendbuf," ");
+                        strcat(sendbuf,selection->entries[i]->ip);
+                        strcat(sendbuf," ");
+                        strcat(sendbuf,selection->entries[i]->hash);
                         strcat(sendbuf,"\n");
                     } 
                 } else {

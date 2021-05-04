@@ -2,7 +2,7 @@
 
 #define SERV_IP "127.0.0.1"
 #define TCP_IP "127.0.0.1"
-#define SERV_PORT 1025
+#define UDP_PORT 1500
 #define TCP_PORT 2000
 
 #define NBR_MAX_CLIENT 5
@@ -94,6 +94,9 @@ void UDP_search(int port) {
     //printf("recvsize : %d\n",recvSize);
     if (strcmp("Aucune entré de la base de donnée correspondant à ces mots-clé\n", recvbuf)) {
         int nbrOfResults = countChar(recvbuf, '\n');
+        char* savedRecvbuf = malloc((strlen(recvbuf)+1) * sizeof(char)); // on copy le contenu de recvbuf car il est modifier par l'appel à strtok 
+        strcpy(savedRecvbuf, recvbuf);
+
         char* endLine;
         char* spaces;
         char* result = strtok_r(recvbuf, "\n", &endLine);
@@ -106,22 +109,28 @@ void UDP_search(int port) {
         }
 
         printf("\n\nEntrez le numéro associé au fichier que vous voulez télécharger (entrez 0 pour n'en prendre aucun) : ");
-        char selectedFile[2];
-        fgets(selectedFile,2,stdin);
-        selectedFile[1] = '\0'; // on retire le \n
+        char* selectedFile[4];
+        fgets(selectedFile, 4, stdin);
 
-        //printf("ICI ? %s\n");
         while (atoi(selectedFile) > nbrOfResults) {
             printf("\n\nEntrée invalide");
             printf("\n\nEntrez le numéro associé au fichier que vous voulez télécharger (entrez 0 pour n'en prendre aucun) : ");
             fgets(selectedFile,2,stdin);
-            selectedFile[1] = '\0'; // on retire le \n
         }
 
         if (atoi(selectedFile) == 0) {
             return;
         } else {
-            printf("Vous avez choisi le retour %d, bravo à vous\n");
+            result = strtok(savedRecvbuf, "\n");             // on récupère le numéro du fichier choisi parmis les résultats
+            for (int i = 1; i < atoi(selectedFile); i++) {
+                result = strtok(NULL, "\n");
+                if (i == 4)
+                    return;
+            }
+
+            char* peerIP = strtok(result, " ");         // on récupère l'ip du paire associé, car le format du retour du serveur est : nomDuFichier IP hash
+            peerIP = strtok(NULL, " ");
+            TCP_client(TCP_PORT, peerIP);
         }
 
 
@@ -290,9 +299,10 @@ void TCP_server(int port) {
     printf("[*] TCP - server : Fermeture de la socket d'écoute\n");
 }
 
-void TCP_client(int port) {
+void TCP_client(int port, char* peerIP) {
     int tcp_socketfd;
     struct sockaddr_in peer_address;
+
   
     //création du socket TCP du client
     tcp_socketfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -304,10 +314,11 @@ void TCP_client(int port) {
     else
         printf("[*] TCP - client : Socket créé\n");
     
+
     //adresse du pair
     memset(&peer_address, 0, sizeof(peer_address));
     peer_address.sin_family = AF_INET;
-    peer_address.sin_addr.s_addr = inet_addr(TCP_IP);
+    peer_address.sin_addr.s_addr = inet_addr(peerIP);
     peer_address.sin_port = htons(port);
 
     struct timeval timer;
@@ -315,6 +326,7 @@ void TCP_client(int port) {
     timer.tv_usec = 0;
     setsockopt(tcp_socketfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timer, sizeof timer);
     setsockopt(tcp_socketfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&timer, sizeof timer);
+
 
     //connexion au pair
     if (connect (tcp_socketfd, (struct sockaddr *) &peer_address, sizeof(peer_address) ) != 0)
@@ -324,6 +336,7 @@ void TCP_client(int port) {
     }
     else
         printf("[*] TCP - client : Connexion au pair réussie\n");
+
 
     //envoi du message
     char message[500];

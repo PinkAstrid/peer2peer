@@ -2,7 +2,8 @@
 
 #define SERV_IP "127.0.0.1"
 #define TCP_IP "127.0.0.1"
-#define SERV_PORT 1025
+
+#define UDP_PORT 1500
 #define TCP_PORT 2000
 
 
@@ -25,11 +26,11 @@ int main(int argc, char const *argv[]) {
             while (getchar() != '\n') {} // on vide le buffer de stdin
 
             if (choice=='1')
-                UDP_search(1025);
+                UDP_search(UDP_PORT);
 
 
             if (choice=='2')
-                UDP_publish(1025);
+                UDP_publish(UDP_PORT);
                 //TCP_client(atoi(argv[1]));
 
             if (choice=='3') {
@@ -44,8 +45,8 @@ int main(int argc, char const *argv[]) {
             }
             choice = 'a';
         }
-
+    
     } else {
-        //TCP_server(atoi(argv[2]));
+        TCP_server(TCP_PORT);
     }
 }

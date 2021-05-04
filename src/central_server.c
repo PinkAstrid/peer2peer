@@ -1,7 +1,7 @@
 #include "central_server.h"
 
 #define SERV_IP "127.0.0.1"
-#define SERV_PORT 1025
+#define SERV_PORT 1500
 
 int haveHeader(char* header, char* str) {
     int l = strlen(header);

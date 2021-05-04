@@ -31,7 +31,6 @@ int main(int argc, char const *argv[]) {
 
             if (choice=='2')
                 UDP_publish(UDP_PORT);
-                //TCP_client(atoi(argv[1]));
 
             if (choice=='3') {
                 kill(pid_server,SIGKILL);    

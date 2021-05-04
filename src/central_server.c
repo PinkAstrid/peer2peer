@@ -102,6 +102,7 @@ int main()
     }
 }
 
+/*
 char* newData(char* envoi, struct sockaddr_in client_addr){
     char* buffer = malloc(500* sizeof(char));
     char* newLine = malloc(1500*sizeof(char));
@@ -147,3 +148,4 @@ char* newData(char* envoi, struct sockaddr_in client_addr){
 
     return newLine;
 }
+*/

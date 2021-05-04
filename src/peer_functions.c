@@ -1,4 +1,6 @@
 #include "peer_functions.h"
+#include "server_db.h"
+#include <fcntl.h>
 
 #define SERV_IP "127.0.0.1"
 #define TCP_IP "127.0.0.1"
@@ -6,6 +8,7 @@
 #define TCP_PORT 2000
 
 #define NBR_MAX_CLIENT 5
+#define MAX_SIZE_TCP_MESSAGE 256
 
 #define SOCK_TIMEOUT 3 //temps en seconde avant timeout (envoi et reception)
 
@@ -13,11 +16,26 @@
 ///////////////////////////////////////// FONCTIONS D'ECHANGES
 
 void TCP_server_recv(int socket_client) {
-    char buffer[500];
+    char recvbuf[500];
 
-    recv_tcp(socket_client, buffer, 500);
-    printf("[*] TCP - server : Message reçu : %s\n",buffer);
-    send_tcp(socket_client, buffer, strlen(buffer));
+    recv_tcp(socket_client, recvbuf, 500);
+    printf("[*] TCP - server : Message reçu : {%s}\n",recvbuf);
+    //send_tcp(socket_client, buffer, strlen(buffer));
+
+    int requestedFile = open(recvbuf, O_RDONLY);
+    if (requestedFile <= 0) {
+        printf("[*] TCP - server : Fichier %s inexistant\n", recvbuf);
+        return;
+    } else {
+        char sendbuf[MAX_SIZE_TCP_MESSAGE];
+        int n;
+        while ((n = read(requestedFile, sendbuf, MAX_SIZE_TCP_MESSAGE - 1)) > 0)
+        {
+            sendbuf[n] = '\0';
+            send_tcp(socket_client, sendbuf, n);
+        }
+        printf("[*] TCP - server : Fichier %s envoyé\n", recvbuf);
+    }
 }
 
 
@@ -128,9 +146,11 @@ void UDP_search(int port) {
                     return;
             }
 
-            char* peerIP = strtok(result, " ");         // on récupère l'ip du paire associé, car le format du retour du serveur est : nomDuFichier IP hash
-            peerIP = strtok(NULL, " ");
-            TCP_client(TCP_PORT, peerIP);
+            printf("result : {%s}\n",result);
+            char* requestedFilePath = strtok(result, " ");         // on récupère l'ip du paire associé, car le format du retour du serveur est : nomDuFichier IP hash
+            char* peerIP = strtok(NULL, " ");
+            printf("requestedFilePath : {%s}\n",requestedFilePath);
+            TCP_client(TCP_PORT, peerIP, requestedFilePath);
         }
 
 
@@ -299,7 +319,7 @@ void TCP_server(int port) {
     printf("[*] TCP - server : Fermeture de la socket d'écoute\n");
 }
 
-void TCP_client(int port, char* peerIP) {
+void TCP_client(int port, char* peerIP, char* requestedFilePath) {
     int tcp_socketfd;
     struct sockaddr_in peer_address;
 
@@ -340,17 +360,31 @@ void TCP_client(int port, char* peerIP) {
 
     //envoi du message
     char message[500];
-    strcpy(message,"TEST AMBIANCE ZOUKER");
+    strcpy(message,requestedFilePath);
     send_tcp(tcp_socketfd, message, strlen(message));
 
     //preparation de la reception du fichier
     char recv_buffer[500];
     //le mode w+ permet d'ouvrir en écriture et créer le fichier si il n'exite pas. Si le fichier existe, il est écrasé.
     
-    int len;
-    len = recv_tcp(tcp_socketfd, recv_buffer, 500);
+    char* receivedName = malloc((NAME_LEN + 1 )* sizeof(char));
+    strcpy(receivedName, "received/");
+    strcat(receivedName, getNameFromPath(requestedFilePath));
+    FILE* receivedFile = fopen(receivedName, "w+");
 
-    printf("[*] TCP - client : Message reçu : %s\n",recv_buffer);
+    int len;
+    len = recv_tcp(tcp_socketfd, recv_buffer, MAX_SIZE_TCP_MESSAGE);
+    fwrite(recv_buffer, len, sizeof(char), receivedFile);
+    printf("[*] TCP - client : message reçu : \n\n%s",recv_buffer);
+
+    while (len > 0) {
+        len = recv_tcp(tcp_socketfd, recv_buffer, MAX_SIZE_TCP_MESSAGE);
+        printf("%s",recv_buffer);
+        fwrite(recv_buffer, len, sizeof(char), receivedFile);
+    }
+    fclose(receivedFile);
+
+    //printf("[*] TCP - client : Message reçu : %s\n",recv_buffer);
     printf("[*] TCP - client : Fermeture du socket\n");
 
     close(tcp_socketfd);

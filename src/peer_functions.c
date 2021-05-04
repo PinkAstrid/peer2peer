@@ -147,15 +147,16 @@ void UDP_search(int port) {
             }
 
             printf("result : {%s}\n",result);
-            char* requestedFilePath = strtok(result, " ");         // on récupère l'ip du paire associé, car le format du retour du serveur est : nomDuFichier IP hash
+            char* requestedFilePath = strtok(result, " ");         // on récupère l'ip du pair associé, car le format du retour du serveur est : nomDuFichier IP hash
             char* peerIP = strtok(NULL, " ");
+            char* hash = strtok(NULL, " ");
             printf("requestedFilePath : {%s}\n",requestedFilePath);
-            TCP_client(TCP_PORT, peerIP, requestedFilePath);
+            TCP_client(TCP_PORT, peerIP, requestedFilePath, hash);
         }
 
 
     } else {
-        printf("Aucune entré de la base de donnée correspondant à ces mots-clé\n");
+        printf("Aucune entrée de la base de donnée correspondant à ces mots-clé\n");
     }
 
     close(socket_server);
@@ -319,7 +320,7 @@ void TCP_server(int port) {
     printf("[*] TCP - server : Fermeture de la socket d'écoute\n");
 }
 
-void TCP_client(int port, char* peerIP, char* requestedFilePath) {
+void TCP_client(int port, char* peerIP, char* requestedFilePath, char* expectedHash) {
     int tcp_socketfd;
     struct sockaddr_in peer_address;
 
@@ -383,6 +384,18 @@ void TCP_client(int port, char* peerIP, char* requestedFilePath) {
         fwrite(recv_buffer, len, sizeof(char), receivedFile);
     }
     fclose(receivedFile);
+    
+    char* calculatedhHash = hash_file(receivedName);
+    //printf("expected hash : {%s}\n calculated hash : {%s}\n",expectedHash, calculatedhHash);
+
+    if (strcmp(calculatedhHash,expectedHash)) {
+        printf("[*] TCP - client : Hash invalide, modification du fichier lors de l'échange\n");
+        return;
+    } else {
+        printf("[*] TCP - client : Hash valide\n");
+    }
+
+    printf("[*] TCP - client : Le fichier %s à bien été téléchargé et ce trouve dans le dossier received\n", getNameFromPath(receivedName));
 
     //printf("[*] TCP - client : Message reçu : %s\n",recv_buffer);
     printf("[*] TCP - client : Fermeture du socket\n");

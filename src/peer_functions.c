@@ -1,6 +1,6 @@
 #include "peer_functions.h"
 #include "server_db.h"
-#include <fcntl.h>
+
 
 #define SERV_IP "127.0.0.1"
 #define TCP_IP "127.0.0.1"
@@ -166,11 +166,15 @@ void UDP_publish(int port) {
     
     printf("[*] UDP - client : Entrez le chemin du fichier à envoyer : ");
     char* filePath = malloc(200*sizeof(char));
+    char* absoluteFilePath = malloc(200*sizeof(char));
     fgets(filePath,200, stdin);
     filePath[strlen(filePath) - 1] = 0;
 
-    printf("strlen filepath : %d\n",strlen(filePath));
-    printf("file path : {%s}\n",filePath);
+    realpath(filePath,absoluteFilePath); // on récupère le chemin absolu
+
+    //printf("strlen filepath : %d\n",strlen(filePath));
+    //printf("file path : {%s}\n",filePath);
+    //printf("absolute filepath : {%s}\n",absoluteFilePath);
 
     FILE* sentFile;
     if(!(sentFile = fopen(filePath, "r"))){
@@ -194,7 +198,7 @@ void UDP_publish(int port) {
     }
 
     char* bufferEnvoi = malloc(MAX_SIZE_PUBLISH * sizeof(char));
-    sprintf(bufferEnvoi, "PUBLISH %s %s %s %s", filePath, extension, keywords, hash);
+    sprintf(bufferEnvoi, "PUBLISH %s %s %s %s", absoluteFilePath, extension, keywords, hash);
 
     int socket_server, recvSize, ttl;
     struct sockaddr_in serv_addr;

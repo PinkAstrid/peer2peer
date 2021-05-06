@@ -15,6 +15,8 @@
 #include <sys/time.h>
 #include <signal.h>
 #include <openssl/sha.h>
+#include <fcntl.h>
+#include <limits.h>
 
 #define MAX_SIZE_PUBLISH 500
 

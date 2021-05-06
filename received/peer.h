@@ -10,4 +10,7 @@
 #include     <netdb.h>
 #include     <stdlib.h>
 #include     <strings.h>
-#include     "server_db.h"
+#include     <unistd.h>
+#include     <signal.h>
+
+char* addFileToServer();

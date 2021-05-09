@@ -1,6 +1,5 @@
 #include "central_server.h"
 
-#define SERV_IP "127.0.0.1"
 #define SERV_PORT 1500
 
 int haveHeader(char* header, char* str) {
@@ -15,7 +14,7 @@ int haveHeader(char* header, char* str) {
 
 int main()
 {   
-    printf("[*] UDP - server : Lacement du serveur central\n");
+    printf("[*] UDP - server : Lancement du serveur central\n");
     db_t* db = createDB("test/content.csv");    // On charge la base de donnée du serveur
     char* keyWords[1]; // vecteur temporaire pour essayer de récupérer des infos depuis le client
 
@@ -39,7 +38,7 @@ int main()
     bzero((char *) &cli_addr, sizeof(cli_addr));
     bzero((char *) &serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = PF_INET;
-    serv_addr.sin_addr.s_addr = inet_addr(SERV_IP);
+    serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(SERV_PORT);
 
     if (bind(sockfd, (struct sockaddr*) &serv_addr, serv_addr_len) < 0) {

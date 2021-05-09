@@ -1,13 +1,5 @@
 #include "peer_functions.h"
 
-#define SERV_IP "127.0.0.1"
-#define TCP_IP "127.0.0.1"
-
-#define UDP_PORT 1500
-#define TCP_PORT 2000
-
-
-
 int main(int argc, char const *argv[]) {
     int pid_server;
     if ((pid_server = fork()) !=0) {
@@ -26,11 +18,11 @@ int main(int argc, char const *argv[]) {
             while (getchar() != '\n') {} // on vide le buffer de stdin
 
             if (choice=='1')
-                UDP_search(UDP_PORT);
+                UDP_search();
 
 
             if (choice=='2')
-                UDP_publish(UDP_PORT);
+                UDP_publish();
 
             if (choice=='3') {
                 kill(pid_server,SIGKILL);    
@@ -46,6 +38,6 @@ int main(int argc, char const *argv[]) {
         }
     
     } else {
-        TCP_server(TCP_PORT);
+        TCP_server();
     }
 }

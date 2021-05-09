@@ -1,7 +1,7 @@
 peer:
-	cd src;gcc -c peer.c -Wall
-	cd src;gcc -c peer_functions.c -Wall -lssl -lcrypto
-	cd src;gcc peer_functions.o peer.o -o ../peer -Wall -lssl -lcrypto
+	cd src;gcc -c peer.c
+	cd src;gcc -c peer_functions.c -lssl -lcrypto
+	cd src;gcc peer_functions.o peer.o -o ../peer -lssl -lcrypto
 	@echo "peer compilé"
 
 
@@ -12,9 +12,9 @@ clean:
 	@echo "Nettoyage terminé"
 
 central_server:
-	cd src;gcc -c central_server.c -Wall
-	cd src;gcc -c server_db.c -Wall
-	cd src;gcc server_db.o central_server.o -o ../central_server -Wall
+	cd src;gcc -c central_server.c
+	cd src;gcc -c server_db.c
+	cd src;gcc server_db.o central_server.o -o ../central_server
 	@echo "central_server compilé"
 
 all:

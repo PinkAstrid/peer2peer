@@ -22,9 +22,9 @@
 
 int recv_tcp(int socketfd, char* buffer, int buff_size);
 void send_tcp(int socketfd, char* buffer, int buff_size);
-void TCP_server(int port);
-void TCP_client(int port, char* peerIP, char* requestedFilePath, char* expectedHash);
-void UDP_search(int port);
+void TCP_server();
+void TCP_client(char* peerIP, char* requestedFilePath, char* expectedHash);
+void UDP_search();
 void UDP_publish();
 char* hash_file(char* filePath);
 int countChar(char* str, char selection);

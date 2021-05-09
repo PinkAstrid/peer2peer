@@ -2,8 +2,7 @@
 #include "server_db.h"
 
 
-#define SERV_IP "127.0.0.1"
-#define TCP_IP "127.0.0.1"
+#define SERV_IP "192.168.1.16"
 #define UDP_PORT 1500
 #define TCP_PORT 2000
 
@@ -63,14 +62,14 @@ int recv_tcp(int socket, char* buffer, int buff_size) {
         printf("[*] TCP : Message de fin de connexion reçu\n");
     }
     else
-        printf("Erreur recv!\n");
+        printf("[*] TCP : Erreur lors du recv\n");
 
     return res;
 }
 
 ///////////////////////////////////////// FONCTIONS REQUETES
 
-void UDP_search(int port) {
+void UDP_search() {
     int socket_server, recvSize, ttl;
     struct sockaddr_in serv_addr;
     char sendbuf[1500];
@@ -88,8 +87,8 @@ void UDP_search(int port) {
 
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = PF_INET;
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    serv_addr.sin_port = htons(port);
+    serv_addr.sin_addr.s_addr = inet_addr(SERV_IP);
+    serv_addr.sin_port = htons(UDP_PORT);
 
     printf("Entrez le mot clé :\n");
     fgets(userEntry,1400,stdin);
@@ -127,7 +126,7 @@ void UDP_search(int port) {
         }
 
         printf("\n\nEntrez le numéro associé au fichier que vous voulez télécharger (entrez 0 pour n'en prendre aucun) : ");
-        char* selectedFile[4];
+        char selectedFile[4];
         fgets(selectedFile, 4, stdin);
 
         while (atoi(selectedFile) > nbrOfResults) {
@@ -146,12 +145,10 @@ void UDP_search(int port) {
                     return;
             }
 
-            printf("result : {%s}\n",result);
             char* requestedFilePath = strtok(result, " ");         // on récupère l'ip du pair associé, car le format du retour du serveur est : nomDuFichier IP hash
             char* peerIP = strtok(NULL, " ");
             char* hash = strtok(NULL, " ");
-            printf("requestedFilePath : {%s}\n",requestedFilePath);
-            TCP_client(TCP_PORT, peerIP, requestedFilePath, hash);
+            TCP_client(peerIP, requestedFilePath, hash);
         }
 
 
@@ -162,7 +159,7 @@ void UDP_search(int port) {
     close(socket_server);
 }
 
-void UDP_publish(int port) {
+void UDP_publish() {
     
     printf("[*] UDP - client : Entrez le chemin du fichier à envoyer : ");
     char* filePath = malloc(200*sizeof(char));
@@ -181,7 +178,7 @@ void UDP_publish(int port) {
         perror("[*] UDP - client : Le fichier n'existe pas");
         return;
     }
-    close(sentFile);
+    fclose(sentFile);
 
     char* extension = strrchr(filePath, '.') + 1;
     
@@ -215,8 +212,8 @@ void UDP_publish(int port) {
 
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = PF_INET;
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    serv_addr.sin_port = htons(port);
+    serv_addr.sin_addr.s_addr = inet_addr(SERV_IP);
+    serv_addr.sin_port = htons(UDP_PORT);
     
 
     UDP_send(socket_server, serv_addr, bufferEnvoi, strlen(bufferEnvoi));
@@ -226,7 +223,7 @@ void UDP_publish(int port) {
 
 ///////////////////////////////////////// FONCTIONS FINALES
 
-void TCP_server(int port) {
+void TCP_server() {
     printf("[*] TCP - server : Lancement\n");
 
     int socket_ecoute;
@@ -241,7 +238,7 @@ void TCP_server(int port) {
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    server_addr.sin_port = htons(port);
+    server_addr.sin_port = htons(TCP_PORT);
 
     struct timeval timer;       // on met en place un timeout pour éviter que le serveur soit bloqué si le client ne répond plus
     timer.tv_sec = SOCK_TIMEOUT;
@@ -324,7 +321,7 @@ void TCP_server(int port) {
     printf("[*] TCP - server : Fermeture de la socket d'écoute\n");
 }
 
-void TCP_client(int port, char* peerIP, char* requestedFilePath, char* expectedHash) {
+void TCP_client(char* peerIP, char* requestedFilePath, char* expectedHash) {
     int tcp_socketfd;
     struct sockaddr_in peer_address;
 
@@ -344,7 +341,7 @@ void TCP_client(int port, char* peerIP, char* requestedFilePath, char* expectedH
     memset(&peer_address, 0, sizeof(peer_address));
     peer_address.sin_family = AF_INET;
     peer_address.sin_addr.s_addr = inet_addr(peerIP);
-    peer_address.sin_port = htons(port);
+    peer_address.sin_port = htons(TCP_PORT);
 
     struct timeval timer;
     timer.tv_sec = SOCK_TIMEOUT;
@@ -380,11 +377,9 @@ void TCP_client(int port, char* peerIP, char* requestedFilePath, char* expectedH
     int len;
     len = recv_tcp(tcp_socketfd, recv_buffer, MAX_SIZE_TCP_MESSAGE);
     fwrite(recv_buffer, len, sizeof(char), receivedFile);
-    printf("[*] TCP - client : message reçu : \n\n%s",recv_buffer);
 
     while (len > 0) {
         len = recv_tcp(tcp_socketfd, recv_buffer, MAX_SIZE_TCP_MESSAGE);
-        printf("%s",recv_buffer);
         fwrite(recv_buffer, len, sizeof(char), receivedFile);
     }
     fclose(receivedFile);

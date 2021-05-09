@@ -1,0 +1,14 @@
+\section{Programme Principal}
+\subsection{Côté serveur}
+Le serveur est lancé par le programme \verb|central_server|. Lors de son lancement,  il crée sa BDD (expliquée en partie 3). Il crée ensuite une socket DGRAM et attend d'être sollicité par un client.
+\vskip 0.25cm
+Lorsqu'il est sollicité, il regarde le header du message qu'il a reçu. Si celui-ci est "\verb|SEARCH|", il lance une recherche dans la BDD (voir partie 4). Si le header est "\verb|PUBLISH|", il commence l'ajout d'une nouvelle entrée dans la BDD (voir partie 5).
+
+\subsection{Côté Client}
+Le client est lancé par le programme \verb|peer|. Lors de son lancement, le processus se sépare en deux par un fork. Dans le fils, il est "actif" et dans le père, il est "passif".
+\vskip 0.25cm
+
+Dans son fonctionnement "actif", il demande à l'utilisateur ce qu'il compte faire : lancer une recherche, publier ou s'arrêter là. En fonction du choix de l'utilisateur, il lance la fonction appropriée.\\
+\vskip 0.25cm
+
+Dans son fonctionnement passif, il lance la fonction \verb|TCP_server| pour attendre une demande de connexion vers son port 2000 dans le cadre de la récupération de fichiers (voir partie 6).

@@ -1,0 +1,37 @@
+La récupération de fichier est lancée par la fonction \verb|TCP_client| depuis le demandeur de fichier.
+
+\subsection{Création de connexion}
+Le demandeur de fichier crée une socket SOCK\_STREAM qu'il lie avec l'adresse qui est passée en entrée de la fonction. Normalement, le possesseur du fichier est en statut "passif" (voir partie 2.2) et est donc prêt à lancer une connexion aussi de son côté : si une place est disponible dans sa liste de connexions disponibles, il en réserve une pour ce nouveau client et traite sa demande, sinon, la demande de connexion est rejetée et devra être renouvelée par le demandeur.
+\vskip 0.25cm
+
+Cette connexion est limitée par un timeout de 3 secondes qui est passé en option des deux sockets.
+
+
+\subsection{Demande de fichier}
+\subsubsection{Côté possesseur}
+Une fois la connexion créée, le possesseur de fichier lance la fonction \verb|TCP_server_recv| qui lui permet de recevoir la demande et de la traiter avec la fonction \verb|recv_tcp|.
+\vskip 0.25cm
+
+Cette fonction reçoit les messages du demandeur et les traitent : si le message est vide cela signifie que le demandeur souhaite terminer la connexion, on enregistre donc uniquement le caractère '\verb|\0|' dans le buffer de retour, sinon on y enregistre directement le message.\\
+\vskip 0.25cm
+
+Si un fichier est ouvrable avec le message reçu, le possesseur l'ouvre en mode lecture et commence l'envoi.
+\subsubsection{Côté demandeur}
+
+Lorsque la connexion est établie, le demandeur envoie le chemin et le nom du fichier qu'il recherche et attends le retour du possesseur.
+
+\subsection{Envoi de données}
+\subsubsection{Côté possesseur}
+Le possesseur traite le fichier qu'il a ouvert : tant qu'il y a des données à envoyer, il envoie le plus grand nombre de données possible par la connexion TCP.
+
+
+\subsubsection{Côté demandeur}
+Le possesseur essaie de créer un fichier au nom de celui attendu dans le dossier "\verb|received|". Si celui-ci existe déjà, l'ancien fichier est écrasé.
+\vskip 0.25cm
+Puis à l'aide de la fonction \verb|recv_tcp| (expliquée en 6.2.1), tant qu'il reçoit des données, il les écrit dans le nouveau fichier. Une fois les données reçues, il vérifie que le hash d'intégrité calculé sur le nouveau fichier est bien celui attendu : si le hash est incorrect, l'utilisateur est prévenu et doit recommencer sa demande.
+\vskip 0.25cm
+
+Une fois le hash vérifié, l'utilisateur est prévenu du bon téléchargement du fichier et rappelé de son emplacement.
+
+\subsection{Fin de la connexion}
+Lorsque l'envoi est terminé, l'envoyeur ferme la connexion et libère une place dans sa liste de connexion disponible. De même, une fois le téléchargement complété et validé, le demandeur ferme la connexion et la fonction \verb|TCP_client| se termine.

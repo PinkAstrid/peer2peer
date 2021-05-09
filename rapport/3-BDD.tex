@@ -1,0 +1,29 @@
+\section{Format de la BDD}
+\subsection{Entrée dans la BDD}
+Le serveur connaît une BDD sous le format d'un tableau d'entrée. Ces entrées sont représentées par une structure qui connaît les attributs suivants :
+\begin{itemize}
+    \item \verb|ip| : addresse IP à l'origine de l'entrée sous format d'une chaîne de caractères
+    \item \verb|name| : nom de l'entrée sous format d'une chaîne de caractères
+    \item \verb|type| : le type de fichier de l'entrée, sous format d'une chaîne de carctères
+    \item \verb|keyWords| : l'ensemble des mots-clés associés à l'entrée, sous format d'un ensemble de chaînes de caractères
+    \item \verb|keyWordNbr| : le nombre de mots-clés sous le format d'un entier
+    \item \verb|hash| : le code de hachage assurant l'intégrité du fichier, sous format d'une chaîne de caractères
+\end{itemize}
+
+\subsection{Création de la BDD du serveur}
+Cette BDD est créée à partir du document \verb|content.csv| à chaque lancée du serveur grâce aux fonctions \verb|createDB|, \verb|createDB_entries| et \verb|fillDB_entries|.
+\vskip 0.25cm
+
+La fonction \verb|createDB| traite le fichier CSV : elle vérifie que le fichier ne contient pas plus d'entrée que la BDD ne peut en contenir, soit 100 entrées, et si ce n'est pas le cas, elle crée une BDD qu'elle remplit avec \verb|createDB_entries| avant de la renvoyer.
+\vskip 0.25cm
+
+La fonction \verb|createDB_entries| réserve l'espace nécessaire en mémoire pour l'ensemble des entrées de la BDD et renvoie le tableau d'entrées rempli par \verb|fillDB_entries|.
+\vskip 0.25cm
+
+Enfin la fonction \verb|fillDB_entries| traite le fichier CVS ligne par ligne : à chaque ligne, donc chaque entrée, il récupère les informations séparées par un point-virgule suivi d'une saut de ligne. On fait attention à d'abord séparer les mots-clés selon le caractère \verb|'/'|, avant de les enregistrer. 
+
+\subsection{Suppression de la BDD}
+
+En cas de besoin, l'espace mémoire utilisé par une BDD est libéré à l'aide de la fonction \verb|freeDB|. Pour chacune des entrées de la BDD, la fonction libère les espaces retenus par les attributs de l'entrée, avant de libérer l'espace tenu par le tableau d'entrée et la BDD en général.
+
+

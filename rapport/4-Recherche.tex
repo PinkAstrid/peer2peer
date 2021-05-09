@@ -1,0 +1,29 @@
+\section{Recherche de fichiers}
+
+La recherche est lancée depuis le client par la fonction \verb|UDP_search|.
+
+\subsection{Collecte du mot-clé auprès du client}
+Lors d'une recherche, il est demandé au client d'entrer le mot-clé de sa recherche dans l'entrée standard. Celui-ci est récupéré et préparé à l'envoi : on lui enlève le marqueur de saut de ligne \verb|\n| que l'on remplace par le marqueur de fin de chaîne de caractère \verb|\0|.
+\vskip 0.25cm
+
+Une fois le mot-clé récupéré, il est envoyé par UDP avec le header de message \verb|SEARCH| pour notifier au serveur que l'on veut effectuer une recherche.
+
+\subsection{Mise en place de la connexion UDP}
+\subsubsection{Côté serveur}
+
+Le serveur récupère le mot clé sur lequel opérer une recherche. Il renvoi la phrase "Aucune entré de la base de donnée correspondant à ces mots-clé", s'il ne trouve aucune entrée, ou l'ensemble des fichiers pouvant correspondre, accompagné du chemin permettant de les retrouver sur la machine du pair, l'adresse IP et le hash permettant la vérification de l'intégrité du fichier transférer.
+
+
+\subsubsection{Côté client}
+Le serveur lance une socket DGRAM et se lie à l'adresse 127.0.0.1 (adresse du serveur). Une fois lié au serveur, le client envoie le message par UDP.
+
+
+\subsection{Recherche d'élément dans la BDD}
+
+Lorsque le serveur reçoit une demande de recherche, il lance la fonction \verb|searchByKeyWords|. Dans un premier temps, cette fonction copie l'entièreté de la BDD, puis pour chaque entrée de la BDD vérifie si le mot recherché fait partie des mots-clés de l'entrée. Si ce n'est pas le cas, la fonction supprime l'entrée dans la copie de la BDD. Une fois toutes les entrées traitées, elle renvoie la BDD réduite.
+\vskip 0.25cm
+
+Une chaîne de caractères contenant toutes les entrées est préparées à partir de la BDD réduite et est envoyé au client par la connexion UDP. Le serveur supprime ensuite la BDD réduite à l'aide de la fonction \verb|freeDB| (expliquée en 3.3).
+
+\subsection{Réception des informations}
+Lorsque le serveur envoie l'ensemble des entrées trouvées au client par la connexion UDP, le client les présente numérotées à l'utilisateur sur la sortie standard. Si celui-ci veut télécharger une des entrées, il lui est proposé d'entrer le numéro de celle-ci dans l'entrée, ce qui lance la fonction \verb|TCP_client| (expliquée dans la partie 6), sinon d'entrer 0 pour s'arrêter là.

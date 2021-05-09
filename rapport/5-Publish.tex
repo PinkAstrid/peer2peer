@@ -1,0 +1,20 @@
+La publication de fichier est lancée depuis le client par la fonction \verb|UDP_publish|.
+
+
+\subsection{Récupération et mise en forme des données à envoyer}
+Lors de la publication d'un fichier, il est demandé à l'utilisateur de rentrer l'adresse relative du fichier, puis les mots-clés séparés les uns des autres par le caractère "\verb|/|" dans l'entrée standard. L'adresse relative est transformée en adresse abosule par la fonction \verb|realpath|.
+\vskip 0.25cm
+
+
+À partir de ces informations, un message contenant le header "\verb|PUBLISH|", l'adresse du fichier, son extension (obtenue à partir de l'adresse du fichier), ses mots-clés et son hash d'intégrité est envoyé. Ce message sera envoyé une fois la connexion au serveur établie.
+
+\subsection{Mise en place de la connexion UDP}
+La mise en place de la connexion UDP a été faite de manière similaire à celle faite pour la recherche.
+\vskip 0.25cm
+
+Une fois le client connecté au serveur, le message est transmis par UDP.
+
+\subsection{Récupération des données et création d'entrée dans la BDD}
+Lorsque le serveur reçoit une requête de publication, il lance la fonction \verb|addEntry|. Cette fonction découpe le message arrivé en sous-informations pour créer, dans un premier temps, une nouvelle ligne dans le fichier CSV pour permettre de garder l'entrée au long terme, et, dans un second temps, l'entrée dans la BDD du serveur, avec des ré-attributions d'espace mémoire.
+\vskip 0.25cm
+Lorsque l'entrée est créée, le serveur envoie un accusé de réception et de publication au client.

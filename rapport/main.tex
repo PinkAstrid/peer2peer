@@ -1,0 +1,83 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+\usepackage[document]{ragged2e}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{adjustbox}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{fancyvrb}
+\usepackage{cite}
+\usepackage{multicol}
+\usepackage{url}
+\usepackage{subcaption}
+\usepackage{stmaryrd}
+\usepackage{amsmath}
+\usepackage[ruled, vlined, french, noend]{algorithm2e}
+\usepackage{hyperref}
+\usepackage{moreverb}
+
+%Set up algorithm2e
+\SetKw{KwDe}{allant de }
+\SetKw{KwEt}{et }
+\SetKw{KwDonc}{donc : }
+
+
+\newcommand{\titre}{Projet Réseaux - MyP2P}
+\newcommand{\matiere}{RSA}
+\title{\titre{}}
+\author{Marie-Astrid Chanteloup, Milan Kania}
+\date{Avril 2021}
+
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\titre{}}
+\lhead{\matiere}
+\rfoot{Page \thepage}
+ 
+\geometry{legalpaper, margin=1.15in}
+
+
+
+\begin{document}
+
+\input{pageDeGarde}
+\newpage
+
+\tableofcontents
+
+%Début Chapitre 1 : Introduction
+\newpage
+\section{Introduction}
+\input{1-Intro}
+%Fin chapitre 1
+
+%Debut chapitre 2 : Recherche
+\input{2-Main}
+%Fin chapitre 2
+
+%Debut chapitre 3 : Publish
+\input{3-BDD}
+%Fin chapitre 3
+
+\input{4-Recherche}
+
+\section{Publication de fichier}
+\input{5-Publish}
+
+%Debut chapitre 4 : Get
+\section{Récupération de fichier}
+\input{6-Get}
+%Fin chapitre 4
+
+
+%Debut chapitre 5 : Bilan
+\newpage
+\section{Bilan}
+\input{7-Bilan}
+%Fin chapitre 5
+ \end{document}
